@@ -74,7 +74,7 @@
                                 <span class="text-green-800 text-sm font-bold"
                                     sec:authorize="hasRole('SCIENTIST')">🔬</span>
                                 <span class="text-green-800 text-sm font-bold"
-                                    sec:authorize="hasRole('USER') and !hasRole('SCIENTIST')">👤</span>
+                                    sec:authorize="hasRole('GUEST') and !hasRole('SCIENTIST')">👤</span>
                             </div>
                             <span class="text-white text-sm font-medium" sec:authentication="name">User</span>
                         </div>

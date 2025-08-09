@@ -40,7 +40,7 @@ public class SecurityConfig {
             )
             .formLogin(form -> form
                 .loginPage("/login")                                    // Custom login page
-                .defaultSuccessUrl("/scientist/dashboard", true)        // Redirect after successful login
+                .successHandler(new LoginSuccessHandler())       // Redirect after successful login
                 .permitAll()
             )
             .logout(logout -> logout
