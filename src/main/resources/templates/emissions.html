@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>CO₂ Emissionsdaten - Weltkarte</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="/css/emissions-map.css" />
+</head>
+<body class="bg-gray-50">
+    <!--
+      Main navigation bar fragment inclusion.
+      Provides consistent navigation across all pages.
+    -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="max-w-full mx-auto px-20 py-6">
+        <!--
+          Header and legend section.
+          Displays the map title, search, and legend for emission levels.
+        -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!--
+              Header and search area (left).
+              Allows users to search for a country and interact with the map.
+            -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h2 class="text-3xl font-bold text-gray-900 mb-4">🌍 CO₂ Emissionen - Interaktive Weltkarte</h2>
+                <p class="text-gray-600 mb-6">Klicken Sie auf ein Land für Details oder suchen Sie gezielt:</p>
+                
+                <div class="flex flex-wrap gap-3">
+                    <input type="text" class="flex-1 min-w-60 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500" 
+                           id="countrySearch" 
+                           placeholder="Land eingeben (z.B. Germany)" 
+                           th:value="${selectedCountry}">
+                    <button type="button" class="bg-green-600 hover:bg-green-700 text-white font-bold px-6 py-3 rounded-lg transition-colors" onclick="searchCountry()">
+                        🔍 Suchen
+                    </button>
+                </div>
+                <div class="flex flex-wrap gap-3 mt-3">
+                    <button type="button" class="bg-gray-500 hover:bg-gray-600 text-white font-bold px-6 py-3 rounded-lg transition-colors" onclick="resetView()">
+                        🌍 Zurücksetzen
+                    </button>
+                    <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-6 py-3 rounded-lg transition-colors" onclick="refreshData()">
+                        🔄 Aktualisieren
+                    </button>
+                </div>
+            </div>
+
+            <!--
+              Legend section (right).
+              Explains the color coding for emission levels on the map.
+            -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h6 class="text-xl font-bold text-gray-900 mb-4">📊 CO₂-Emissionen Legende</h6>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div class="flex items-center">
+                        <span class="w-4 h-4 rounded-full mr-3 flex-shrink-0" style="background: #2166ac;"></span>
+                        <span class="text-sm"><strong>Sehr niedrig:</strong> < 100k kt</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-4 h-4 rounded-full mr-3 flex-shrink-0" style="background: #5aae61;"></span>
+                        <span class="text-sm"><strong>Niedrig:</strong> 100k - 500k kt</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-4 h-4 rounded-full mr-3 flex-shrink-0" style="background: #a50026;"></span>
+                        <span class="text-sm"><strong>Mittel:</strong> 500k - 2M kt</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-4 h-4 rounded-full mr-3 flex-shrink-0" style="background: #d73027;"></span>
+                        <span class="text-sm"><strong>Hoch:</strong> 2M - 5M kt</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-4 h-4 rounded-full mr-3 flex-shrink-0" style="background: #40004b;"></span>
+                        <span class="text-sm"><strong>Sehr hoch:</strong> > 5M kt</span>
+                    </div>
+                    <div class="flex items-center">
+                        <span class="w-4 h-4 rounded-full mr-3 flex-shrink-0" style="background: #cccccc;"></span>
+                        <span class="text-sm"><strong>Keine Daten</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+          Main content grid.
+          Contains the country data panel and the interactive world map.
+        -->
+        <div class="grid grid-cols-12 gap-6" id="main-content">
+            
+            <!--
+              Country data panel (left).
+              Displays detailed emission data for the selected country.
+            -->
+            <div class="col-span-12 lg:col-span-4" id="country-panel" style="display: none;">
+                <div class="bg-blue-50 border border-blue-200 rounded-xl shadow-lg p-6 h-full">
+                    <h4 class="text-2xl font-bold text-blue-900 mb-6 text-center">
+                        🔍 <span id="country-name"></span>
+                    </h4>
+                    
+                    <!--
+                      Data available section.
+                      Shows emission data table for the selected country.
+                    -->
+                    <div id="data-available-section" style="display: none;">
+                        <h6 class="text-lg font-semibold text-blue-900 mb-4">Jahres-Entwicklung der CO₂-Emissionen:</h6>
+                        <div class="bg-white rounded-lg border border-blue-200 overflow-hidden">
+                            <div style="max-height: 500px; overflow-y: auto;">
+                                <table class="w-full text-sm">
+                                    <thead class="bg-blue-100 sticky top-0">
+                                        <tr>
+                                            <th class="px-4 py-3 text-left font-semibold text-blue-900 border-b border-blue-200">Jahr</th>
+                                            <th class="px-4 py-3 text-left font-semibold text-blue-900 border-b border-blue-200">CO₂ (kt)</th>
+                                            <th class="px-4 py-3 text-left font-semibold text-blue-900 border-b border-blue-200">Quelle</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="emissions-table-body" class="divide-y divide-blue-100">
+                                        <!-- Dynamic data will be inserted here -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-6 space-y-3">
+                            <button class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md" 
+                                    id="back-to-map-btn">
+                                🌍 Zurück zur Karte
+                            </button>
+                            <button class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md" 
+                                    id="export-data-btn">
+                                📥 Daten exportieren
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!--
+                      No data section.
+                      Shown when no emission data is available for the selected country.
+                    -->
+                    <div id="no-data-section" style="display: none;">
+                        <div class="text-center">
+                            <div class="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-3xl">⚠️</span>
+                            </div>
+                            <p class="text-yellow-700 text-lg mb-6">Keine Daten verfügbar</p>
+                            <button class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition-colors shadow-md" 
+                                    id="back-to-map-no-data-btn">
+                                🌍 Zurück zur Karte
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!--
+              World map container (right).
+              Displays the interactive Leaflet map.
+            -->
+            <div class="col-span-12" id="map-container">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden relative">
+                    <div id="worldMap" style="height: 800px; max-height: 800px; width: 100%;"></div>
+                    
+                    <!--
+                      Loading spinner overlay.
+                      Shown while map data is loading.
+                    -->
+                    <div class="absolute inset-0 bg-white bg-opacity-90 flex items-center justify-center" id="loading-spinner" style="display: none;">
+                        <div class="text-center">
+                            <div class="animate-spin rounded-full h-16 w-16 border-b-4 border-green-600 mx-auto"></div>
+                            <p class="mt-4 text-gray-700 text-lg">Länderdaten werden geladen...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-gray-400">© 2025 Like Hero To Zero - Für eine nachhaltigere Zukunft</p>
+        </div>
+    </footer>
+
+    <!--
+      JavaScript dependencies and modules.
+      Includes Leaflet, map logic, and navbar highlighting.
+    -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="/js/emissions-map.js"></script>
+    
+    <!-- Navbar Active Highlighting -->
+    <script src="/js/navbar-active.js"></script>
+    
+    <!--
+      Passes backend data to the map initialization function.
+      Ensures the map is initialized with the correct emissions data and selected country.
+    -->
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const emissionsData = /*[[${allEmissions}]]*/ [];
+            const selectedCountry = /*[[${selectedCountry}]]*/ null;
+            
+            initEmissionsMap(emissionsData, selectedCountry);
+        });
+    </script>

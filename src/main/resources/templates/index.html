@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>Like Hero To Zero - Startseite</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!--
+      Main navigation bar fragment inclusion.
+      Provides consistent navigation across all pages.
+    -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="max-w-6xl mx-auto mt-12 px-4">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!--
+              Welcome section.
+              Greets the user and provides a brief introduction to the platform.
+            -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h1 class="text-4xl font-bold text-gray-900 mb-6">
+                    <span sec:authorize="!isAuthenticated()">Willkommen bei Like Hero To Zero 🌍</span>
+                    <span sec:authorize="isAuthenticated()">Willkommen zurück, <span sec:authentication="name" class="text-green-600"></span>! 🌍</span>
+                </h1>
+                <p class="text-lg text-gray-600 mb-6 leading-relaxed">
+                    Visualisierung globaler CO₂-Emissionen für eine nachhaltigere Zukunft
+                </p>
+                <div class="w-20 h-1 bg-green-500 mb-6"></div>
+                <p class="text-gray-700 mb-8">
+                    Erkunden Sie weltweite CO₂-Emissionsdaten und unterstützen Sie die Klimaforschung.
+                </p>
+                <a class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg transition-colors shadow-md hover:shadow-lg" 
+                   href="/emissions">
+                    CO₂ Daten anzeigen 📊
+                </a>
+            </div>
+
+            <!--
+              Scientist login section (only for unauthenticated users).
+              Promotes advanced features for scientists and provides login/register options.
+            -->
+            <div sec:authorize="!isAuthenticated()" class="bg-blue-50 border border-blue-200 rounded-xl shadow-lg p-8">
+                <div class="text-center mb-6">
+                    <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl">🔬</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-blue-900 mb-2">
+                        Sie sind Scientist?
+                    </h2>
+                    <p class="text-blue-700">
+                        Melden Sie sich an für erweiterte Funktionen
+                    </p>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="flex items-center text-blue-700">
+                        <span class="mr-3">✓</span>
+                        <span>Zugang zu detaillierten Datensätzen</span>
+                    </div>
+                    <div class="flex items-center text-blue-700">
+                        <span class="mr-3">✓</span>
+                        <span>Erweiterte Analyse-Tools</span>
+                    </div>
+                    <div class="flex items-center text-blue-700">
+                        <span class="mr-3">✓</span>
+                        <span>Daten-Export Funktionen</span>
+                    </div>
+                    <div class="flex items-center text-blue-700">
+                        <span class="mr-3">✓</span>
+                        <span>Kollaborative Forschung</span>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-8 rounded-lg transition-colors shadow-md hover:shadow-lg w-full" 
+                       href="/login">
+                        Jetzt anmelden 🚀
+                    </a>
+                    <p class="text-sm text-blue-600 mt-4">
+                        Noch kein Account? <a href="/register" class="underline hover:text-blue-800">Hier registrieren</a>
+                    </p>
+                </div>
+            </div>
+
+            <!--
+              Dashboard link for authenticated scientists.
+              Provides quick access to the scientist dashboard and its features.
+            -->
+            <div sec:authorize="hasRole('SCIENTIST')" class="bg-green-50 border border-green-200 rounded-xl shadow-lg p-8">
+                <div class="text-center mb-6">
+                    <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl">🔬</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-green-900 mb-2">
+                        Scientist Dashboard
+                    </h2>
+                    <p class="text-green-700">
+                        Verwalten Sie Ihre Forschungsdaten
+                    </p>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="flex items-center text-green-700">
+                        <span class="mr-3">📊</span>
+                        <span>Datenanalyse und -verwaltung</span>
+                    </div>
+                    <div class="flex items-center text-green-700">
+                        <span class="mr-3">📤</span>
+                        <span>Neue Daten hochladen</span>
+                    </div>
+                    <div class="flex items-center text-green-700">
+                        <span class="mr-3">✏️</span>
+                        <span>Änderungsanträge bearbeiten</span>
+                    </div>
+                    <div class="flex items-center text-green-700">
+                        <span class="mr-3">📈</span>
+                        <span>Statistische Auswertungen</span>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a class="inline-block bg-green-600 hover:bg-green-700 text-white font-bold py-4 px-8 rounded-lg transition-colors shadow-md hover:shadow-lg w-full" 
+                       href="/scientist/dashboard">
+                        Zum Dashboard 🚀
+                    </a>
+                </div>
+            </div>
+
+            <!--
+              User info for authenticated normal users.
+              Highlights features available to regular users.
+            -->
+            <div sec:authorize="hasRole('USER') and !hasRole('SCIENTIST')" class="bg-yellow-50 border border-yellow-200 rounded-xl shadow-lg p-8">
+                <div class="text-center mb-6">
+                    <div class="bg-yellow-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-3xl">👤</span>
+                    </div>
+                    <h2 class="text-2xl font-bold text-yellow-900 mb-2">
+                        Willkommen, <span sec:authentication="name"></span>!
+                    </h2>
+                    <p class="text-yellow-700">
+                        Sie haben vollen Zugang zu den CO₂-Daten
+                    </p>
+                </div>
+                
+                <div class="space-y-4 mb-6">
+                    <div class="flex items-center text-yellow-700">
+                        <span class="mr-3">🌍</span>
+                        <span>Vollständige Kartenansicht</span>
+                    </div>
+                    <div class="flex items-center text-yellow-700">
+                        <span class="mr-3">📊</span>
+                        <span>Detaillierte Datenanalyse</span>
+                    </div>
+                    <div class="flex items-center text-yellow-700">
+                        <span class="mr-3">🔍</span>
+                        <span>Erweiterte Suchfunktionen</span>
+                    </div>
+                    <div class="flex items-center text-yellow-700">
+                        <span class="mr-3">💾</span>
+                        <span>Persönliche Einstellungen</span>
+                    </div>
+                </div>
+                
+                <div class="text-center">
+                    <a class="inline-block bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-4 px-8 rounded-lg transition-colors shadow-md hover:shadow-lg w-full" 
+                       href="/emissions">
+                        Daten erkunden 🔍
+                    </a>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!--
+          Features section.
+          Highlights the main features of the platform.
+        -->
+        <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <div class="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">🌍</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Globale Daten</h3>
+                <p class="text-gray-600">Weltweite CO₂-Emissionsdaten aus vertrauenswürdigen Quellen</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <div class="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">📊</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Interaktive Karten</h3>
+                <p class="text-gray-600">Visualisierung der Daten auf interaktiven Weltkarten</p>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6 text-center">
+                <div class="bg-yellow-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-2xl">⚡</span>
+                </div>
+                <h3 class="text-lg font-semibold text-gray-900 mb-2">Echtzeit Updates</h3>
+                <p class="text-gray-600">Aktuelle Daten und regelmäßige Updates</p>
+            </div>
+        </div>
+    </div>
+    
+    <!--
+      Footer section.
+      Displays copyright.
+    -->
+    <footer class="bg-gray-800 text-white mt-20 py-8">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-gray-400">© 2025 Like Hero To Zero - Für eine nachhaltigere Zukunft</p>
+        </div>
+    </footer>
+    
+    <!--
+      Navbar active highlighting script.
+      Highlights the current page in the navigation bar.
+    -->
+    <script src="/js/navbar-active.js"></script>
+</body>

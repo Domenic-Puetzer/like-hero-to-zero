@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="/img/favicon.ico">
+    <title>Scientist Dashboard - Like Hero To Zero</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <!--
+      Main navigation bar fragment inclusion.
+      Provides consistent navigation across all pages.
+    -->
+    <div th:replace="~{fragments/navbar :: navbar}"></div>
+
+    <div class="max-w-7xl mx-auto mt-8 px-4">
+        <!--
+          Success and error message display.
+          Shows feedback to the user after actions such as uploads or edits.
+        -->
+        <div th:if="${success}" class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg mb-6 relative">
+            <div class="flex items-center">
+                <span class="mr-2">✅</span>
+                <span th:text="${success}"></span>
+            </div>
+            <button onclick="this.parentElement.style.display='none'" class="absolute top-0 right-0 mt-2 mr-2 text-green-700 hover:text-green-900">
+                ✕
+            </button>
+        </div>
+        
+        <div th:if="${error}" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6 relative">
+            <div class="flex items-center">
+                <span class="mr-2">⚠️</span>
+                <span th:text="${error}"></span>
+            </div>
+            <button onclick="this.parentElement.style.display='none'" class="absolute top-0 right-0 mt-2 mr-2 text-red-700 hover:text-red-900">
+                ✕
+            </button>
+        </div>
+
+        <!--
+          Dashboard header section.
+          Welcomes the user and provides a brief description of the dashboard's purpose.
+        -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-4">🔬 Scientist Dashboard</h1>
+            <p class="text-gray-600">
+                Willkommen zurück, <span class="font-semibold text-green-600" sec:authentication="name">Wissenschaftler</span>! 
+                Verwalten Sie Ihre CO₂-Emissionsdaten und tragen Sie zur Klimaforschung bei.
+            </p>
+            
+            <!--
+              Notification for pending edit requests.
+              Alerts the user if there are any open edit requests for their data.
+            -->
+            <div th:if="${pendingRequestCount > 0}" class="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div class="flex items-center">
+                    <span class="text-2xl mr-3">📬</span>
+                    <div>
+                        <h4 class="font-semibold text-yellow-800">Neue Bearbeitungsanfragen</h4>
+                        <p class="text-yellow-700">
+                            Sie haben <strong th:text="${pendingRequestCount}">0</strong> offene Bearbeitungsanfrage(n) für Ihre Daten.
+                            <a href="#pending-requests" class="underline font-medium">Jetzt ansehen</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+          Statistics overview section.
+          Displays key metrics: total countries, total data points, user uploads, and latest year.
+        -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <span class="text-2xl">🌍</span>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Länder</h3>
+                        <p class="text-3xl font-bold text-blue-600" th:text="${totalCountries ?: 0}">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <span class="text-2xl">📊</span>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Gesamt Daten</h3>
+                        <p class="text-3xl font-bold text-green-600" th:text="${totalDataPoints ?: 0}">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="bg-yellow-100 p-3 rounded-full">
+                        <span class="text-2xl">🔄</span>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Meine Uploads</h3>
+                        <p class="text-3xl font-bold text-yellow-600" th:text="${myDataCount ?: 0}">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <div class="flex items-center">
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <span class="text-2xl">📅</span>
+                    </div>
+                    <div class="ml-4">
+                        <h3 class="text-lg font-semibold text-gray-900">Neueste Jahr</h3>
+                        <p class="text-3xl font-bold text-purple-600" th:text="${latestYear ?: '---'}">---</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+          Quick action cards.
+          Allow users to add new data or view the public map.
+        -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="bg-blue-50 border border-blue-200 rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-blue-900 mb-4">📥 Neue Daten hinzufügen</h3>
+                <p class="text-blue-700 mb-6">Fügen Sie neue CO₂-Emissionsdaten zur Datenbank hinzu und erweitern Sie die Forschungsbasis.</p>
+                <a href="/scientist/upload" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors inline-block">
+                    🚀 Daten uploaden
+                </a>
+            </div>
+
+            <div class="bg-green-50 border border-green-200 rounded-xl shadow-lg p-6">
+                <h3 class="text-xl font-bold text-green-900 mb-4">🌍 Öffentliche Karte anzeigen</h3>
+                <p class="text-green-700 mb-6">Betrachten Sie die interaktive Weltkarte mit allen verfügbaren CO₂-Emissionsdaten.</p>
+                <a href="/emissions" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors inline-block">
+                    🗺️ Karte öffnen
+                </a>
+            </div>
+        </div>
+
+        <!--
+          User's uploaded data table.
+          Displays all data uploaded by the current user with options to edit or delete.
+        -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">📋 Meine hochgeladenen Daten</h3>
+                <div class="flex space-x-3">
+                    <button onclick="refreshData()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                        🔄 Aktualisieren
+                    </button>
+                    <a href="/scientist/upload" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg transition-colors text-sm">
+                        ➕ Neu hinzufügen
+                    </a>
+                </div>
+            </div>
+
+            <!--
+              Filter and search controls for the user's data table.
+              Allows filtering by country name or year.
+            -->
+            <div class="mb-6 flex flex-wrap gap-4">
+                <input type="text" id="searchFilter" placeholder="Land oder Jahr suchen..." 
+                       class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <select id="yearFilter" class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500">
+                    <option value="">Alle Jahre</option>
+                    <option th:each="year : ${availableYears}" th:value="${year}" th:text="${year}"></option>
+                </select>
+                <button onclick="applyFilters()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors">
+                    🔍 Filtern
+                </button>
+                <button onclick="clearFilters()" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition-colors">
+                    ✖️ Filter löschen
+                </button>
+            </div>
+
+            <!--
+              Data table for user's uploads.
+              Supports sorting and actions for each row.
+            -->
+            <div class="overflow-x-auto" th:if="${myData != null and not #lists.isEmpty(myData)}">
+                <table class="w-full text-sm" id="dataTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" onclick="sortTable(0)">
+                                Land 📊
+                            </th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" onclick="sortTable(1)">
+                                Jahr 📅
+                            </th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900 cursor-pointer hover:bg-gray-100" onclick="sortTable(2)">
+                                CO₂ (kt) 🏭
+                            </th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900">Hinzugefügt 🕒</th>
+                            <th class="px-4 py-3 text-center font-semibold text-gray-900">Aktionen ⚙️</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr th:each="data : ${myData}" class="hover:bg-gray-50 transition-colors data-row">
+                            <td class="px-4 py-3 font-medium text-gray-900" th:text="${data.countryName}"></td>
+                            <td class="px-4 py-3" th:text="${data.year}"></td>
+                            <td class="px-4 py-3 font-mono" th:text="${#numbers.formatDecimal(data.co2EmissionKt, 1, 'POINT', 0, 'COMMA')}"></td>
+                            <td class="px-4 py-3 text-gray-600" th:text="${#temporals.format(data.sourceDate, 'dd.MM.yyyy')}"></td>
+                            <td class="px-4 py-3 text-center">
+                                <div class="flex justify-center space-x-2">
+                                    <button type="button"
+                                            th:data-id="${data.id}"
+                                            th:data-country="${data.countryName}"
+                                            th:data-year="${data.year}"
+                                            th:data-co2="${data.co2EmissionKt}"
+                                            th:data-source="${data.dataSource}"
+                                            onclick="showDirectEditModal(this)"
+                                            class="bg-yellow-500 hover:bg-yellow-600 text-white px-3 py-1 rounded text-xs transition-colors"
+                                            title="Bearbeiten">
+                                        ✏️ Edit
+                                    </button>
+                                <button type="button" 
+                                        th:data-id="${data.id}"
+                                        th:data-country="${data.countryName}"
+                                        th:data-year="${data.year}"
+                                        onclick="showDeleteModal(this)"
+                                        class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition-colors"
+                                        title="Löschen">
+                                    🗑️ Löschen
+                                </button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!--
+              Message shown when the user has not uploaded any data yet.
+            -->
+            <div th:if="${myData == null or #lists.isEmpty(myData)}" class="text-center py-12">
+                <div class="bg-gray-100 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-4xl">📊</span>
+                </div>
+                <h4 class="text-xl font-semibold text-gray-900 mb-2">Noch keine Daten hochgeladen</h4>
+                <p class="text-gray-600 mb-6">Sie haben noch keine CO₂-Emissionsdaten hinzugefügt. Starten Sie jetzt!</p>
+                <a href="/scientist/upload" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition-colors">
+                    🚀 Erste Daten hinzufügen
+                </a>
+            </div>
+        </div>
+
+        <!--
+          Pending edit requests section.
+          Lists all open edit requests for the user's data.
+        -->
+        <div id="pending-requests" class="bg-white rounded-xl shadow-lg p-6 mb-8" th:if="${pendingRequests != null and not #lists.isEmpty(pendingRequests)}">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">📬 Offene Bearbeitungsanfragen</h3>
+                <span class="bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm font-medium">
+                    <span th:text="${pendingRequestCount}">0</span> offen
+                </span>
+            </div>
+            
+            <div class="space-y-4">
+                <div th:each="request : ${pendingRequests}" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="font-semibold text-gray-900">
+                                <span th:text="${request.requester.firstName + ' ' + request.requester.lastName}">Antragsteller</span>
+                                möchte Daten bearbeiten
+                            </h4>
+                            <p class="text-sm text-gray-600">
+                                Datensatz: <strong th:text="${request.emissionData.countryName + ' (' + request.emissionData.year + ')'}">Land (Jahr)</strong>
+                            </p>
+                            <p class="text-xs text-gray-500" th:text="${#temporals.format(request.requestedAt, 'dd.MM.yyyy HH:mm')}">Datum</p>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="showApproveModal(this)" 
+                                    th:data-request-id="${request.id}"
+                                    th:data-requester="${request.requester.firstName + ' ' + request.requester.lastName}"
+                                    th:data-country="${request.emissionData.countryName}"
+                                    th:data-year="${request.emissionData.year}"
+                                    class="bg-green-500 hover:bg-green-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                ✅ Genehmigen
+                            </button>
+                            <button onclick="showRejectModal(this)"
+                                    th:data-request-id="${request.id}"
+                                    th:data-requester="${request.requester.firstName + ' ' + request.requester.lastName}"
+                                    th:data-country="${request.emissionData.countryName}"
+                                    th:data-year="${request.emissionData.year}"
+                                    class="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition-colors">
+                                ❌ Ablehnen
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded p-3 mb-3">
+                        <p class="text-sm text-gray-700"><strong>Nachricht:</strong></p>
+                        <p class="text-sm text-gray-600" th:text="${request.requestMessage}">Anfrage-Nachricht</p>
+                    </div>
+                    
+                    <div class="bg-blue-50 rounded p-3">
+                        <p class="text-sm text-blue-800"><strong>Vorgeschlagene Änderungen:</strong></p>
+                        <div class="grid grid-cols-2 gap-4 text-xs mt-2">
+                            <div>
+                                <span class="font-medium">Land:</span> 
+                                <span th:text="${request.proposedCountryName}">Neues Land</span>
+                            </div>
+                            <div>
+                                <span class="font-medium">Jahr:</span> 
+                                <span th:text="${request.proposedYear}">Neues Jahr</span>
+                            </div>
+                            <div>
+                                <span class="font-medium">CO₂ (kt):</span> 
+                                <span th:text="${#numbers.formatDecimal(request.proposedCo2EmissionKt, 1, 'POINT', 0, 'COMMA')}">Neuer Wert</span>
+                            </div>
+                            <div>
+                                <span class="font-medium">Quelle:</span> 
+                                <span th:text="${request.proposedDataSource}">Neue Quelle</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+          User's own edit requests section.
+          Shows the status and details of edit requests submitted by the user.
+        -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-8" th:if="${myEditRequests != null and not #lists.isEmpty(myEditRequests)}">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">📝 Meine Bearbeitungsanfragen</h3>
+                <span class="text-sm text-gray-500">Status Ihrer gestellten Anfragen - <span th:text="${#lists.size(myEditRequests)}">0</span> Einträge</span>
+            </div>
+            
+            <div id="myRequestsContainer" class="space-y-4">
+                <div th:each="request : ${myEditRequests}" class="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow request-card" style="display: none;">
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <h4 class="font-semibold text-gray-900">
+                                Bearbeitungsanfrage für 
+                                <span th:text="${request.emissionData.countryName + ' (' + request.emissionData.year + ')'}">Land (Jahr)</span>
+                            </h4>
+                            <p class="text-sm text-gray-600">
+                                Dateninhaber: <strong th:text="${request.dataOwner.firstName + ' ' + request.dataOwner.lastName}">Besitzer</strong>
+                            </p>
+                            <p class="text-xs text-gray-500" th:text="${#temporals.format(request.requestedAt, 'dd.MM.yyyy HH:mm')}">Antragszeit</p>
+                        </div>
+                        <div class="flex items-center">
+                            <!--
+                              Status badge for each edit request.
+                              Indicates whether the request is pending, approved, rejected, or expired.
+                            -->
+                            <span th:switch="${request.status}" class="px-3 py-1 rounded-full text-sm font-medium">
+                                <span th:case="'PENDING'" class="bg-yellow-100 text-yellow-800">🟡 Ausstehend</span>
+                                <span th:case="'APPROVED'" class="bg-green-100 text-green-800">✅ Genehmigt</span>
+                                <span th:case="'REJECTED'" class="bg-red-100 text-red-800">❌ Abgelehnt</span>
+                                <span th:case="'EXPIRED'" class="bg-gray-100 text-gray-800">⏰ Verfallen</span>
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <!--
+                      User's justification for the edit request.
+                    -->
+                    <div class="bg-gray-50 rounded p-3 mb-3">
+                        <p class="text-sm text-gray-700"><strong>Meine Begründung:</strong></p>
+                        <p class="text-sm text-gray-600" th:text="${request.requestMessage}">Anfrage-Nachricht</p>
+                    </div>
+                    
+                    <!--
+                      User's proposed changes for the edit request.
+                    -->
+                    <div class="bg-blue-50 rounded p-3 mb-3">
+                        <p class="text-sm text-blue-800"><strong>Meine vorgeschlagenen Änderungen:</strong></p>
+                        <div class="grid grid-cols-2 gap-4 text-xs mt-2">
+                            <div>
+                                <span class="font-medium">Land:</span> 
+                                <span th:text="${request.proposedCountryName}">Neues Land</span>
+                            </div>
+                            <div>
+                                <span class="font-medium">Jahr:</span> 
+                                <span th:text="${request.proposedYear}">Neues Jahr</span>
+                            </div>
+                            <div>
+                                <span class="font-medium">CO₂ (kt):</span> 
+                                <span th:text="${#numbers.formatDecimal(request.proposedCo2EmissionKt, 1, 'POINT', 0, 'COMMA')}">Neuer Wert</span>
+                            </div>
+                            <div>
+                                <span class="font-medium">Quelle:</span> 
+                                <span th:text="${request.proposedDataSource}">Neue Quelle</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!--
+                      Feedback from the data owner, if available.
+                      Shows the response and response time for approved or rejected requests.
+                    -->
+                    <div th:if="${request.status != T(de.likeherotozero.model.EditRequest$EditRequestStatus).PENDING and request.responseMessage != null and not #strings.isEmpty(request.responseMessage)}">
+                        <div th:if="${request.status == T(de.likeherotozero.model.EditRequest$EditRequestStatus).APPROVED}" 
+                             class="bg-green-50 border border-green-200 rounded p-3">
+                            <p class="text-sm text-green-800"><strong>✅ Antwort vom Dateninhaber:</strong></p>
+                            <p class="text-sm text-green-700" th:text="${request.responseMessage}">Positive Antwort</p>
+                            <p class="text-xs text-green-600 mt-1" th:if="${request.respondedAt != null}" 
+                               th:text="${'Beantwortet am ' + #temporals.format(request.respondedAt, 'dd.MM.yyyy HH:mm')}">Antwortzeit</p>
+                        </div>
+                        
+                        <div th:if="${request.status == T(de.likeherotozero.model.EditRequest$EditRequestStatus).REJECTED}" 
+                             class="bg-red-50 border border-red-200 rounded p-3">
+                            <p class="text-sm text-red-800"><strong>❌ Ablehnungsgrund:</strong></p>
+                            <p class="text-sm text-red-700" th:text="${request.responseMessage}">Ablehnungsgrund</p>
+                            <p class="text-xs text-red-600 mt-1" th:if="${request.respondedAt != null}" 
+                               th:text="${'Abgelehnt am ' + #temporals.format(request.respondedAt, 'dd.MM.yyyy HH:mm')}">Ablehnungszeit</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--
+          Latest system data table.
+          Shows all emission data entries from all users, sorted by the most recent year.
+        -->
+        <div class="bg-white rounded-xl shadow-lg p-6" th:if="${recentData != null and not #lists.isEmpty(recentData)}">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-gray-900">🌍 Systemdaten (Alle Nutzer)</h3>
+                <span class="text-sm text-gray-500">Sortiert nach neuestem Jahr - <span th:text="${#lists.size(recentData)}">0</span> Einträge</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm" id="systemDataTable">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900">Land 🌍</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900">Jahr 📅</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900">CO₂ (kt) 🏭</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900">Quelle 📊</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900">Hochgeladen von 👤</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-900">Datum 🕒</th>
+                            <th class="px-4 py-3 text-center font-semibold text-gray-900">Aktionen ⚙️</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-200">
+                        <tr th:each="data : ${recentData}" class="hover:bg-gray-50 transition-colors pagination-row hidden [&.pagination-visible]:table-row">
+                            <td class="px-4 py-3 font-medium text-gray-900" th:text="${data.countryName}"></td>
+                            <td class="px-4 py-3" th:text="${data.year}"></td>
+                            <td class="px-4 py-3 font-mono" th:text="${#numbers.formatDecimal(data.co2EmissionKt, 1, 'POINT', 0, 'COMMA')}"></td>
+                            <td class="px-4 py-3 text-xs" th:text="${data.dataSource}"></td>
+                            <td class="px-4 py-3">
+                                <!--
+                                  Checks if the entry is a system import or user upload.
+                                  Displays appropriate label for each case.
+                                -->
+                                <span th:if="${data.uploadedBy == null or data.uploadedBy == 'DB_IMPORT' or data.uploadedBy == 'SYSTEM'}" 
+                                      class="text-blue-600 font-medium text-xs bg-blue-50 px-2 py-1 rounded">
+                                    🤖 System Import
+                                </span>
+                                <span th:if="${data.uploadedBy != null and data.uploadedBy != 'DB_IMPORT' and data.uploadedBy != 'SYSTEM'}" 
+                                      class="text-green-600 font-medium text-xs bg-green-50 px-2 py-1 rounded"
+                                      th:text="${data.uploadedBy}">
+                                    Benutzer
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 text-gray-600 text-xs" th:text="${#temporals.format(data.sourceDate, 'dd.MM.yyyy HH:mm')}"></td>
+                            <td class="px-4 py-3 text-center">
+                                <!--
+                                  Edit button logic for system data.
+                                  Allows direct edit for own uploads, edit request for others, and disables for system imports.
+                                -->
+                                <div th:if="${data.uploadedBy != null and data.uploadedBy != 'DB_IMPORT' and data.uploadedBy != 'SYSTEM'}" 
+                                     class="flex justify-center space-x-2">
+                                     
+                                    <!-- Direct edit for own data -->
+                                    <div th:if="${data.uploadedBy == #authentication.name}">
+                                        <button type="button" 
+                                                th:data-id="${data.id}"
+                                                th:data-country="${data.countryName}"
+                                                th:data-year="${data.year}"
+                                                th:data-co2="${data.co2EmissionKt}"
+                                                th:data-source="${data.dataSource}"
+                                                th:data-uploader="${data.uploadedBy}"
+                                                onclick="showDirectEditModal(this)"
+                                                class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs transition-colors"
+                                                title="Bearbeiten">
+                                            ✏️ Bearbeiten
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- Edit request for data uploaded by others -->
+                                    <div th:if="${data.uploadedBy != #authentication.name}">
+                                        <button type="button" 
+                                                th:data-id="${data.id}"
+                                                th:data-country="${data.countryName}"
+                                                th:data-year="${data.year}"
+                                                th:data-co2="${data.co2EmissionKt}"
+                                                th:data-source="${data.dataSource}"
+                                                th:data-uploader="${data.uploadedBy}"
+                                                onclick="showEditRequestModal(this)"
+                                                class="bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs transition-colors"
+                                                title="Bearbeitung anfragen">
+                                            📝 Anfrage
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- No edit button for API/system imports -->
+                                <div th:if="${data.uploadedBy == null or data.uploadedBy == 'DB_IMPORT' or data.uploadedBy == 'SYSTEM'}" 
+                                     class="text-center">
+                                    <span class="text-gray-400 text-xs">API Import</span>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Request Modal -->
+    <div id="editRequestModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl p-6 max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="text-center mb-6">
+                <div class="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">📝</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Bearbeitungsanfrage stellen</h3>
+                <p class="text-gray-600" id="editRequestMessage"></p>
+            </div>
+            
+            <form id="editRequestForm">
+                <input type="hidden" id="editRequestDataId" name="dataId">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Land</label>
+                        <input type="text" id="editRequestCountry" name="proposedCountryName" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Jahr</label>
+                        <input type="number" id="editRequestYear" name="proposedYear" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">CO₂ Emissionen (kt)</label>
+                        <input type="number" step="0.01" id="editRequestCo2" name="proposedCo2EmissionKt" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Datenquelle</label>
+                        <input type="text" id="editRequestSource" name="proposedDataSource" 
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                    </div>
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Begründung für die Änderung</label>
+                    <textarea id="editRequestReason" name="requestMessage" rows="4" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                              placeholder="Bitte erklären Sie, warum diese Änderung notwendig ist..."></textarea>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeEditRequestModal()" 
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Abbrechen
+                    </button>
+                    <button type="button" onclick="submitEditRequest()" 
+                            class="flex-1 bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Anfrage senden
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Direct Edit Modal -->
+    <div id="directEditModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl p-6 max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="text-center mb-6">
+                <div class="bg-blue-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">✏️</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Datensatz bearbeiten</h3>
+                <p class="text-gray-600" id="directEditMessage"></p>
+            </div>
+            
+            <form id="directEditForm">
+                <input type="hidden" id="directEditDataId" name="id">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Land</label>
+                        <input type="text" id="directEditCountry" name="countryName" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Jahr</label>
+                        <input type="number" id="directEditYear" name="year" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">CO₂ Emissionen (kt)</label>
+                        <input type="number" step="0.01" id="directEditCo2" name="co2EmissionKt" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Datenquelle</label>
+                        <input type="text" id="directEditSource" name="dataSource" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+                
+                <div class="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p class="text-yellow-800 text-sm">
+                        <strong>⚠️ Wichtiger Hinweis:</strong><br>
+                        Diese Änderung wird sofort in der öffentlichen Datenbank gespeichert und ist für alle Nutzer sichtbar.
+                    </p>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeDirectEditModal()" 
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Abbrechen
+                    </button>
+                    <button type="button" onclick="submitDirectEdit()" 
+                            class="flex-1 bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Speichern
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Approve Request Modal -->
+    <div id="approveModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl p-6 max-w-md mx-4">
+            <div class="text-center mb-6">
+                <div class="bg-green-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">✅</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Anfrage genehmigen?</h3>
+                <p class="text-gray-600" id="approveMessage"></p>
+            </div>
+            
+            <form id="approveForm" method="post">
+                <input type="hidden" id="approveRequestId" name="requestId">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Antwort (optional)</label>
+                    <textarea name="responseMessage" rows="3" 
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                              placeholder="Optionale Nachricht an den Antragsteller..."></textarea>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeApproveModal()" 
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Abbrechen
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Genehmigen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reject Request Modal -->
+    <div id="rejectModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl p-6 max-w-md mx-4">
+            <div class="text-center mb-6">
+                <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">❌</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Anfrage ablehnen?</h3>
+                <p class="text-gray-600" id="rejectMessage"></p>
+            </div>
+            
+            <form id="rejectForm" method="post">
+                <input type="hidden" id="rejectRequestId" name="requestId">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Begründung</label>
+                    <textarea name="responseMessage" rows="3" required
+                              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                              placeholder="Bitte begründen Sie die Ablehnung..."></textarea>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button type="button" onclick="closeRejectModal()" 
+                            class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Abbrechen
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                        Ablehnen
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
+        <div class="bg-white rounded-xl shadow-xl p-6 max-w-md mx-4">
+            <div class="text-center mb-6">
+                <div class="bg-red-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <span class="text-3xl">🗑️</span>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Datensatz löschen?</h3>
+                <p class="text-gray-600" id="deleteMessage"></p>
+            </div>
+            <div class="flex space-x-4">
+                <button onclick="closeDeleteModal()" class="flex-1 bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    Abbrechen
+                </button>
+                <button onclick="executeDelete()" class="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+                    Löschen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!--
+      Footer section.
+      Displays copyright.
+    -->
+    <footer class="bg-gray-800 text-white mt-20 py-8">
+        <div class="max-w-6xl mx-auto px-4 text-center">
+            <p class="text-gray-400">© 2025 Like Hero To Zero - Für eine nachhaltigere Zukunft</p>
+        </div>
+    </footer>
+
+    <!--
+      JavaScript module imports for dashboard functionality and navbar highlighting.
+    -->
+    <script type="module" src="/js/scientist-dashboard.js"></script>
+    <script src="/js/navbar-active.js"></script>
+</body>
+</html>

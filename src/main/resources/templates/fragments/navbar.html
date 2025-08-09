@@ -1,0 +1,113 @@
+<!--
+  Navbar Fragment
+  Provides the main navigation bar for the application, including links to public pages,
+  the scientist dashboard, and authentication controls. Displays user information and
+  adapts navigation options based on authentication and user roles.
+-->
+
+<!DOCTYPE html>
+<html lang="de" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<body>
+    <!--
+      Main Navigation Bar Fragment
+      - Displays logo and application name
+      - Shows navigation links for Home, CO₂ Data, and Dashboard (for scientists)
+      - Adapts content based on authentication status and user roles
+      - Shows user info and logout for authenticated users
+      - Shows login/register for guests
+    -->
+    <nav th:fragment="navbar" class="bg-green-600 shadow-lg border-b border-green-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <div class="flex justify-between items-center py-4">
+                <!--
+                  Logo Section
+                  - Application logo and name
+                  - Links to the home page
+                -->
+                <a class="text-white text-xl font-bold hover:text-yellow-200 transition-colors flex items-center"
+                    href="/">
+                    <span class="text-2xl mr-2">🌍</span>
+                    Like Hero To Zero
+                </a>
+
+                <div class="flex items-center space-x-8">
+                    <!--
+                      Public Navigation Links
+                      - Home: Main landing page
+                      - CO₂ Data: Public emissions data
+                      - Dashboard: Scientist dashboard (visible only to scientists)
+                    -->
+                    <div class="hidden md:flex items-center space-x-6">
+                        <a id="nav-home" class="text-white hover:text-yellow-300 transition-colors px-3 py-2" href="/">
+                            Home
+                        </a>
+
+                        <a id="nav-emissions" class="text-white hover:text-yellow-300 transition-colors px-3 py-2"
+                            href="/emissions">
+                            CO₂ Daten
+                        </a>
+
+                        <!--
+                          Scientist Dashboard Link
+                          - Visible only for users with the SCIENTIST role
+                        -->
+                        <a id="nav-dashboard" sec:authorize="hasRole('SCIENTIST')"
+                            class="text-white hover:text-yellow-300 transition-colors px-3 py-2"
+                            href="/scientist/dashboard">
+                            Dashboard
+                        </a>
+                    </div>
+
+                    <!--
+                      Authenticated User Section
+                      - Displays user avatar and username
+                      - Provides logout button
+                    -->
+                    <div sec:authorize="isAuthenticated()" class="flex items-center space-x-4">
+                        <!--
+                          User Info
+                          - Shows role-based avatar (scientist or user)
+                          - Displays authenticated username
+                        -->
+                        <div class="flex items-center space-x-3">
+                            <div class="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center">
+                                <span class="text-green-800 text-sm font-bold"
+                                    sec:authorize="hasRole('SCIENTIST')">🔬</span>
+                                <span class="text-green-800 text-sm font-bold"
+                                    sec:authorize="hasRole('USER') and !hasRole('SCIENTIST')">👤</span>
+                            </div>
+                            <span class="text-white text-sm font-medium" sec:authentication="name">User</span>
+                        </div>
+
+                        <!--
+                          Logout Button
+                          - Submits logout form for authenticated users
+                        -->
+                        <form th:action="@{/logout}" method="post" class="inline">
+                            <button type="submit"
+                                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors text-sm font-medium">
+                                Logout
+                            </button>
+                        </form>
+                    </div>
+
+                    <!--
+                      Guest User Section
+                      - Shows login and registration links for unauthenticated users
+                    -->
+                    <div sec:authorize="!isAuthenticated()" class="flex items-center space-x-3">
+                        <a class="text-white hover:text-yellow-300 transition-colors px-4 py-2 rounded border border-transparent hover:border-yellow-300"
+                            href="/login">
+                            Login
+                        </a>
+                        <a class="bg-yellow-500 hover:bg-yellow-600 text-green-900 px-4 py-2 rounded transition-colors font-medium"
+                            href="/register">
+                            Registrieren
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+</body>
+</html>
