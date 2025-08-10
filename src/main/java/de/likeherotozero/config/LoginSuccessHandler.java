@@ -33,7 +33,7 @@ public class LoginSuccessHandler implements AuthenticationSuccessHandler {
         Set<String> roles = AuthorityUtils.authorityListToSet(authentication.getAuthorities());
 
         // Redirect scientists to their dashboard, others to the emissions page
-        if (roles.contains("SCIENTIST") || roles.contains("SCIENTIST")) {
+        if (roles.contains("ROLE_SCIENTIST")) {
             response.sendRedirect("/scientist/dashboard");
         } else {
             response.sendRedirect("/emissions");
