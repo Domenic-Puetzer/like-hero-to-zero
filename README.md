@@ -15,12 +15,13 @@ Web application to visualize global CO₂ emissions. Includes a public frontend 
 - Maven
 
 
-#### 1. Clone the repository
+
+#### 1. Create a new MySQL database
+    Before starting the application, you need to create a MySQL database (e.g. using TablePlus: https://tableplus.com/ or any other MySQL client): You can choose any name (e.g. `likeherotozero`).
+
+#### 2. Clone the repository
     git clone https://github.com/Domenic-Puetzer/like-hero-to-zero.git
     cd like-hero-to-zero
-
-#### 2. Create a new MySQL database
-    Before starting the application, you need to create a MySQL database (e.g. using TablePlus: https://tableplus.com/ or any other MySQL client): You can choose any name (e.g. `likeherotozero`).
 
 #### 3. Copy and rename the environment file
     Rename `env-example` to `.env` in the project root.
