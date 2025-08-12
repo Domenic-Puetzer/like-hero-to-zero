@@ -6,6 +6,38 @@ Web application to visualize global CO₂ emissions. Includes a public frontend 
 
 ---
 
+## 🚀 Getting Started
+
+
+### Prerequisites
+
+- Java 21+
+- Maven
+
+
+#### 1. Clone the repository
+    git clone https://github.com/your-org/like-hero-to-zero.git
+    cd like-hero-to-zero
+
+#### 2. Create a new MySQL database
+    Before starting the application, you need to create a MySQL database (e.g. using TablePlus: https://tableplus.com/ or any other MySQL client): You can choose any name (e.g. `likeherotozero`).
+
+#### 3. Copy and rename the environment file
+    Rename `env-example` to `.env` in the project root.
+
+#### 4. Configure your database credentials
+    Open the `.env` file and enter your MySQL database name, username, and password.
+
+
+#### 5. Start the backend (Spring Boot)
+    ./mvnw spring-boot:run
+#### or:
+    .\mvnw.cmd spring-boot:run
+
+- The app will be available at [http://localhost:8080](http://localhost:8080)
+
+---
+
 ## 🔧 Technologies
 
 - Spring Boot (Java)
@@ -51,38 +83,6 @@ src/
  ├─ test/                             # Tests
 docs/                                 # Additional documentation
 ```
-
----
-
-## 🚀 Getting Started
-
-
-### Prerequisites
-
-- Java 21+
-- Maven
-
-
-#### 1. Clone the repository
-    git clone https://github.com/your-org/like-hero-to-zero.git
-    cd like-hero-to-zero
-
-#### 2. Create a new MySQL database
-    Before starting the application, you need to create a MySQL database (e.g. using TablePlus: https://tableplus.com/ or any other MySQL client): You can choose any name (e.g. `likeherotozero`).
-
-#### 3. Copy and rename the environment file
-    Rename `env-example` to `.env` in the project root.
-
-#### 4. Configure your database credentials
-    Open the `.env` file and enter your MySQL database name, username, and password.
-
-
-#### 5. Start the backend (Spring Boot)
-    ./mvnw spring-boot:run
-#### or:
-    .\mvnw.cmd spring-boot:run
-
-- The app will be available at [http://localhost:8080](http://localhost:8080)
 
 ---
 
