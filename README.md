@@ -16,7 +16,7 @@ Web application to visualize global CO₂ emissions. Includes a public frontend 
 
 
 #### 1. Clone the repository
-    git clone https://github.com/your-org/like-hero-to-zero.git
+    git clone https://github.com/Domenic-Puetzer/like-hero-to-zero.git
     cd like-hero-to-zero
 
 #### 2. Create a new MySQL database
