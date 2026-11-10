@@ -122,4 +122,13 @@ public interface EmissionDataRepository extends JpaRepository<EmissionData, Long
      * @return true if at least one entry exists, false otherwise
      */
     boolean existsByUploadedByAndYear(String uploadedBy, int year);
+
+    /**
+     * Counts the emission records that were created by a specific uploader.
+     * Used by the DataLoader to check whether the database import has already run
+     * (imported rows carry the marker "DB_IMPORT"), so demo rows do not block it.
+     * @param uploadedBy The uploader marker, e.g. "DB_IMPORT" or a username
+     * @return Number of records uploaded by the given uploader
+     */
+    long countByUploadedBy(String uploadedBy);
 }

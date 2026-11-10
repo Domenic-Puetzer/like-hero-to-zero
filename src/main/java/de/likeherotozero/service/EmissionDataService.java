@@ -11,7 +11,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -538,6 +540,12 @@ public class EmissionDataService {
             AtomicInteger importedCount = new AtomicInteger(0);
             
             System.out.println("Saving OWID CO₂ data to database...");
+
+            Set<String> existing = new HashSet<>();
+            for (EmissionData e : repository.findAll()) {
+                existing.add(e.getCountryName() + "|" + e.getYear());
+            }
+            List<EmissionData> batch = new ArrayList<>();
             
             root.fieldNames().forEachRemaining(countryName -> {
                 try {
@@ -558,7 +566,7 @@ public class EmissionDataService {
                                         
                                         if (!co2Node.isNull() && co2Node.asDouble() > 0) {
                                             // Skip if data already exists to avoid duplicates
-                                            if (!dataExists(countryName, year)) {
+                                            if (existing.add(countryName + "|" + year)) {
                                                 EmissionData emission = new EmissionData();
                                                 emission.setCountryName(countryName);
                                                 emission.setCountryCode(countryCode);
@@ -568,8 +576,13 @@ public class EmissionDataService {
                                                 emission.setDataSource("Our World in Data CO₂ Database");
                                                 emission.setUploadedBy("DB_IMPORT"); // Mark as database import
                                                 
-                                                repository.save(emission);
+                                                batch.add(emission);
+
                                                 int current = importedCount.incrementAndGet();
+                                                if (batch.size() >= 500) {
+                                                    repository.saveAll(batch);
+                                                    batch.clear();
+                                                }
                                                 
                                                 // Progress logging every 100 records
                                                 if (current % 100 == 0) {
@@ -586,6 +599,10 @@ public class EmissionDataService {
                     System.err.println("Database error for country " + countryName + ": " + e.getMessage());
                 }
             });
+
+            if (!batch.isEmpty()) {
+                repository.saveAll(batch);
+            }
             
             int totalImported = importedCount.get();
             System.out.println(totalImported + " new CO₂ records imported to database!");
@@ -596,17 +613,6 @@ public class EmissionDataService {
             e.printStackTrace();
             throw new RuntimeException("Database import failed", e);
         }
-    }
-
-    /**
-     * Checks if emission data already exists in database for given country and year.
-     * Used to prevent duplicate entries during import operations.
-     * @param countryName Name of the country
-     * @param year The year to check
-     * @return true if data exists, false otherwise
-     */
-    private boolean dataExists(String countryName, int year) {
-        return repository.findByCountryNameAndYear(countryName, year).isPresent();
     }
 
     // ========================================

@@ -33,30 +33,27 @@ public class DataLoader implements CommandLineRunner {
         // Load demo users first for testing purposes
         loadDemoUsers();
 
-        // Load demo emission data created by demo users
-        loadDemoDataByUser();
-        
-        // Load emission data if database is empty
-        if (repository.count() == 0) {
-            System.out.println("No data found - attempting World Bank import...");
-            
+        // Import only if no imported data exists yet
+        if (repository.countByUploadedBy("DB_IMPORT") == 0) {
+            System.out.println("No imported data found - attempting import...");
+            boolean imported = false;
             try {
                 // First attempt: Load data from external World Bank API
-                int imported = emissionDataService.importWorldBankData();
-                if (imported > 0) {
-                    System.out.println(imported + " World Bank records loaded on startup!");
-                    return; // Success - no fallback data needed
-                }
+                imported = emissionDataService.importWorldBankData() > 0;
             } catch (Exception e) {
-                System.out.println("World Bank import failed: " + e.getMessage());
-                System.out.println("Loading fallback data...");
+                System.out.println("Import failed: " + e.getMessage());
             }
-            
-            // Fallback: Load sample data only if World Bank import fails
-            loadFallbackData();
+            // Fallback only on a completely empty table
+            if (!imported && repository.count() == 0) {
+                System.out.println("Loading fallback data...");
+                loadFallbackData();
+            }
         } else {
-            System.out.println("Data already exists (" + repository.count() + " entries).");
+            System.out.println("Imported data already exists.");
         }
+
+        // Demo emissions for the scientist
+        loadDemoDataByUser();
     }
 
     /**
