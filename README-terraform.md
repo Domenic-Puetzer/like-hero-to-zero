@@ -7,39 +7,17 @@ The portal shows global CO₂ emissions. The Terraform script builds everything 
 
 **Fictional case study:** *ClimateLens GmbH* runs the portal. Users come from all over the world (60 % Europe, 25 % North America, 15 % rest). Load peaks during climate summits. The team has 3 people and a fictional budget of 300 € per month.
 
-| Requirement | Status |
-|---|---|
-| Highly available | prepared (`zone_redundant`), not deployed |
-| Fast worldwide | prepared (`enable_front_door`), not deployed |
-| Backend scales automatically | done (autoscale, 1 to 3 instances) |
-| Infrastructure as Code | done (Terraform) |
-| No credentials in plain text | done, with known limits (see [Development](#-development)) |
-| Monitoring and cost warning | done |
-
 ---
 
-## 🏗️ Architecture
+## 📝 Documentation
 
-```mermaid
-flowchart LR
-    Visitor["Visitor"]
-    FD["Front Door Standard<br/>(optional: enable_front_door)"]
-    APP["Linux Web App (Java 21)<br/>App Service Plan S1<br/>Autoscale 1 to 3 instances"]
-    DB[("MySQL Flexible Server 8.4<br/>B2ms, 20 GB")]
-    KV["Key Vault (RBAC)<br/>db-username, db-password"]
-    MON["Log Analytics<br/>Application Insights<br/>Alert and budget"]
-
-    Visitor -->|"default: direct"| APP
-    Visitor -.->|"optional"| FD
-    FD -.-> APP
-    APP -->|"JDBC, SSL"| DB
-    APP -->|"Managed Identity"| KV
-    APP --> MON
-    KV --> MON
-    DB --> MON
-```
-
-Solid lines exist in the deployed setup. Dashed lines belong to Front Door, which is prepared in the code but not deployed. Details: [architecture.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/architecture.md).
+- [docs/terraform/architecture.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/architecture.md) – Overview, resource names, request and secret flow
+- [docs/terraform/app-service.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/app-service.md) – App Service plan, web app, autoscale
+- [docs/terraform/database.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/database.md) – MySQL Flexible Server
+- [docs/terraform/key-vault.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/key-vault.md) – Secret management in detail
+- [docs/terraform/monitoring.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/monitoring.md) – Logs, alert, budget
+- [docs/terraform/front-door.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/front-door.md) – Optional Front Door and zone redundancy
+- [docs/terraform/costs.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/costs.md) – Cost estimate
 
 ---
 
@@ -320,18 +298,6 @@ The two switches are independent. With Front Door, the public address is the out
 
 - Infrastructure changed: `cd terraform`, then `terraform plan` and `terraform apply`.
 - Application changed: repeat steps 5 and 6 of [Getting Started](#-getting-started).
-
----
-
-## 📝 Documentation
-
-- [docs/terraform/architecture.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/architecture.md) – Overview, resource names, request and secret flow
-- [docs/terraform/app-service.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/app-service.md) – App Service plan, web app, autoscale
-- [docs/terraform/database.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/database.md) – MySQL Flexible Server
-- [docs/terraform/key-vault.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/key-vault.md) – Secret management in detail
-- [docs/terraform/monitoring.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/monitoring.md) – Logs, alert, budget
-- [docs/terraform/front-door.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/front-door.md) – Optional Front Door and zone redundancy
-- [docs/terraform/costs.md](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/docs/terraform/costs.md) – Cost estimate
 
 ---
 
