@@ -119,7 +119,8 @@ az webapp deploy --resource-group rg-likeherotozero --name <APP-NAME> --src-path
 
 #### 7. Open the app
 
-On the first start the application imports the data (`DataLoader`). This took about 2 minutes on S1 and B2ms (one run, measured with a stopwatch). Wait for it before opening the app.
+When you open the website for the first time, the application imports the initial data into the database using (`DataLoader`). 
+This may take about two minutes on S1 and B2ms. Please wait until the import has completed before using the application.
 
 The URL was printed in step 4. To show it again:
 
