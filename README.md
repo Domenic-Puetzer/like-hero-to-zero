@@ -14,7 +14,11 @@ Web application to visualize global CO₂ emissions. Includes a public frontend 
 - Java 21+
 - Maven
 
+### Deployment to Microsoft Azure
 
+If you want to set up the application in Microsoft Azure using Terraform,
+please follow the instructions in the
+[Terraform README](https://github.com/Domenic-Puetzer/like-hero-to-zero/blob/master/terraform/README.md).
 
 #### 1. Create a new MySQL database
     Before starting the application, you need to create a MySQL database (e.g. using TablePlus: https://tableplus.com/ or any other MySQL client): You can choose any name (e.g. `likeherotozero`).
