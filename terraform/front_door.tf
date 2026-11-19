@@ -15,7 +15,7 @@
  */
 resource "azurerm_cdn_frontdoor_profile" "main" {
   count               = var.enable_front_door ? 1 : 0
-  name                = "afd-${var.project_name}"
+  name                = "fd-${var.project_name}"
   resource_group_name = azurerm_resource_group.main.name
   sku_name            = "Standard_AzureFrontDoor"
 }
