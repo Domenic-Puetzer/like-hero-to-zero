@@ -51,7 +51,7 @@ Some names must be globally unique (web app, Key Vault, MySQL server, Front Door
 | Alert | `alert-http-5xx` |
 | Budget | `budget-likeherotozero` |
 | Autoscale | `autoscale-likeherotozero` |
-| Front Door (optional) | `afd-likeherotozero`, `fde-likeherotozero-<suffix>`, `og-likeherotozero`, `origin-webapp`, `route-webapp` |
+| Front Door (optional) | `fd-likeherotozero`, `fde-likeherotozero-<suffix>`, `og-likeherotozero`, `origin-webapp`, `route-webapp` |
 
 The prefix is `project_name`. The default is `likeherotozero`.
 

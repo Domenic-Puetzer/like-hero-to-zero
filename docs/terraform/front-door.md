@@ -21,7 +21,7 @@ visitor -> endpoint -> route -> origin group -> origin (web app)
 
 | Resource | Name | Notes |
 |---|---|---|
-| Profile | `afd-<project_name>` | Global entry point. The Standard tier has a base fee per profile, billed hourly |
+| Profile | `fd-<project_name>` | Global entry point. The Standard tier has a base fee per profile, billed hourly |
 | Endpoint | `fde-<project_name>-<suffix>` | Public host name. Must be globally unique |
 | Origin group | `og-<project_name>` | Health probe: HTTPS `HEAD` on `/` every 100 seconds. Default load balancing |
 | Origin | `origin-webapp` | The web app, over HTTPS port 443. Certificate name is checked |
